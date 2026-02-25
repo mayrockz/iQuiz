@@ -104,7 +104,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
 
             self.downloadQuizzes(from: urlString)
-            self.startAutoRefresh() 
+            self.startAutoRefresh()
         }
         
         alert.addTextField { textField in
@@ -161,8 +161,20 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                     self.quizzes = quizzes
                     self.tableView.reloadData()
 
+                    QuizStorageManager.shared.save(quizzes)
+
                 case .failure:
+                    print("Network failed. Trying local storage...")
+
+                if let localQuizzes = QuizStorageManager.shared.load()
+                {
+                    self.quizzes = localQuizzes
+                    self.tableView.reloadData()
+                }
+                else
+                {
                     self.showNetworkError()
+                }
             }
         }
     }

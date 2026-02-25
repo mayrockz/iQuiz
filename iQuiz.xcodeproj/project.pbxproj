@@ -27,6 +27,7 @@
 		6C48F2A42F455C3C00E495CB /* iQuiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iQuiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C48F2BA2F455C3E00E495CB /* iQuizTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iQuizTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C48F2C42F455C3E00E495CB /* iQuizUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iQuizUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C48F3632F4EE19000E495CB /* Untitled.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Untitled.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +89,7 @@
 		6C48F29B2F455C3C00E495CB = {
 			isa = PBXGroup;
 			children = (
+				6C48F3622F4EE17600E495CB /* Settings.bundle */,
 				6C48F2A62F455C3C00E495CB /* iQuiz */,
 				6C48F2BD2F455C3E00E495CB /* iQuizTests */,
 				6C48F2C72F455C3E00E495CB /* iQuizUITests */,
@@ -103,6 +105,14 @@
 				6C48F2C42F455C3E00E495CB /* iQuizUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6C48F3622F4EE17600E495CB /* Settings.bundle */ = {
+			isa = PBXGroup;
+			children = (
+				6C48F3632F4EE19000E495CB /* Untitled.swift */,
+			);
+			path = Settings.bundle;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
