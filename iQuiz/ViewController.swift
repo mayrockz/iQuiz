@@ -9,66 +9,49 @@ import UIKit
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate
 {
-    private var quizzes: [Quiz] =
-    [
-        Quiz(
-            title: "Mathematics",
-            description: "Test your math knowledge!",
-            iconName: "function",
-            questions:
-            [
-                Question(
-                    text: "What is 2 + 2?",
-                    answers: ["0", "4", "5"],
-                    correctIndex: 1
-                ),
-                Question(
-                    text: "What is 10 / 2?",
-                    answers: ["0", "20", "5"],
-                    correctIndex: 2
-                )
-            ]
-        ),
-        Quiz(
-            title: "Marvel Super Heroes",
-            description: "Test your Marvel knowledge!",
-            iconName: "bolt.fill",
-            questions:
-            [
-                Question(
-                    text: "Who is Iron Man?",
-                    answers: ["Tony Stark", "Steve Rogers", "Thor"],
-                    correctIndex: 0
-                )
-            ]
-        ),
-        Quiz(
-            title: "Science",
-            description: "Test your science knowledge!",
-            iconName: "atom",
-            questions:
-            [
-                Question(
-                    text: "What planet is known as the Red Planet?",
-                    answers: ["Mars", "Saturn", "Venus"],
-                    correctIndex: 0
-                )
-            ]
-        )
-    ]
-
+    private let defaultURL = "http://tednewardsandbox.site44.com/questions.json"
+    
+    private var quizzes: [Quiz] = []
     private let tableView = UITableView()
+    
+    private let refreshControl = UIRefreshControl()
+    private var refreshTimer: Timer?
+    
+    @objc private func handleRefresh()
+    {
+        let savedURL = UserDefaults.standard.string(forKey: "quizURL") ?? defaultURL
+        downloadQuizzes(from: savedURL)
+    }
+    
+    private func startAutoRefresh()
+    {
+        refreshTimer?.invalidate()
+
+        let interval = UserDefaults.standard.double(forKey: "refreshInterval")
+
+        guard interval > 0 else { return }
+
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: interval,
+                                             repeats: true) { _ in
+            let savedURL = UserDefaults.standard.string(forKey: "quizURL") ?? self.defaultURL
+            self.downloadQuizzes(from: savedURL)
+        }
+    }
 
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
 
         title = "iQuiz"
         view.backgroundColor = .systemBackground
+        
+        let savedURL = UserDefaults.standard.string(forKey: "quizURL") ?? defaultURL
+
+        downloadQuizzes(from: savedURL)
 
         setupTableView()
         setupNavigationBar()
+        startAutoRefresh()
     }
 
     private func setupTableView()
@@ -76,7 +59,13 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         tableView.frame = view.bounds
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(QuizTableViewCell.self, forCellReuseIdentifier: QuizTableViewCell.identifier)
+        tableView.register(QuizTableViewCell.self,
+                           forCellReuseIdentifier: QuizTableViewCell.identifier)
+
+        refreshControl.addTarget(self,
+                                 action: #selector(handleRefresh),
+                                 for: .valueChanged)
+        tableView.refreshControl = refreshControl
 
         view.addSubview(tableView)
     }
@@ -95,15 +84,44 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     {
         let alert = UIAlertController(
             title: "Settings",
-            message: "Settings go here",
+            message: "Enter quiz data URL",
             preferredStyle: .alert
         )
+        
+        alert.addTextField { textField in
+            textField.text = UserDefaults.standard.string(forKey: "quizURL") ??
+                             "http://tednewardsandbox.site44.com/questions.json"
+        }
+        
+        let checkNow = UIAlertAction(title: "Save", style: .default) { _ in
+            let urlString = alert.textFields?[0].text ?? ""
+            let intervalText = alert.textFields?[1].text ?? ""
 
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+            UserDefaults.standard.set(urlString, forKey: "quizURL")
+
+            if let interval = Double(intervalText) {
+                UserDefaults.standard.set(interval, forKey: "refreshInterval")
+            }
+
+            self.downloadQuizzes(from: urlString)
+            self.startAutoRefresh() 
+        }
+        
+        alert.addTextField { textField in
+            textField.placeholder = "Refresh interval (seconds)"
+            let savedInterval = UserDefaults.standard.double(forKey: "refreshInterval")
+            if savedInterval > 0 {
+                textField.text = "\(savedInterval)"
+            }
+            textField.keyboardType = .numberPad
+        }
+        
+        alert.addAction(checkNow)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
         present(alert, animated: true)
     }
 
-// tableview
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
     {
         return quizzes.count
@@ -131,4 +149,34 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         navigationController?.pushViewController(questionVC, animated: true)
     }
+    
+    private func downloadQuizzes(from urlString: String)
+    {
+        NetworkManager.shared.fetchQuizzes(from: urlString) { result in
+            self.refreshControl.endRefreshing()
+
+            switch result
+            {
+                case .success(let quizzes):
+                    self.quizzes = quizzes
+                    self.tableView.reloadData()
+
+                case .failure:
+                    self.showNetworkError()
+            }
+        }
+    }
+    
+    private func showNetworkError()
+    {
+        let alert = UIAlertController(
+            title: "Network error!",
+            message: "Unable to download quiz data. Please check your connection.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
 }
+

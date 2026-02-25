@@ -7,9 +7,14 @@
 
 import Foundation
 
-struct Question
+struct Question: Codable
 {
     let text: String
     let answers: [String]
-    let correctIndex: Int
+    let answer: String
+    
+    var correctIndex: Int
+    {
+        return answers.firstIndex(of: answer) ?? 0
+    }
 }

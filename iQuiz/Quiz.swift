@@ -7,10 +7,12 @@
 
 import Foundation
 
-struct Quiz
+struct Quiz: Codable
 {
     let title: String
-    let description: String
-    let iconName: String
-    let questions: [Question]
+    let desc: String
+    let questions: [ Question ]
+    
+    var description: String { desc }
+    var iconName: String { "questionmark.circle" }
 }
